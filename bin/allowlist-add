@@ -1,0 +1,24 @@
+#!/data/data/com.termux/files/usr/bin/bash
+set -euo pipefail
+PATFILE="$HOME/codex/allowlist.patterns"
+mkdir -p "$(dirname "$PATFILE")"
+touch "$PATFILE"
+
+task="${1:-}"
+[ -n "$task" ] || exit 0
+
+# If given a relative path, prefer absolute
+case "$task" in
+  /*) abs="$task" ;;
+  *)  abs="$(cd "$(dirname "$task")" 2>/dev/null && pwd)/$(basename "$task")" || abs="$task" ;;
+esac
+
+# Escape for regex and allow trailing args
+# Turn / into \/ and escape regex metacharacters
+esc="$(printf '%s' "$abs" | sed -E 's/[.[\]{}()^$+*?|\\]/\\&/g; s_/_\\/_g')"
+regex="^[[:space:]]*${esc}(\\s|\$)"
+
+# Only append if not present
+if ! grep -qF "$regex" "$PATFILE"; then
+  printf '%s\n' "$regex" >> "$PATFILE"
+fi
