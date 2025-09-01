@@ -28,6 +28,8 @@ if bash "$task"; then
   "$HOME/codex/bin/sands-bless" 2>>"$LOG" || true
   # auto-allowlist the successful task
   "$HOME/codex/bin/allowlist-add" "$task" 2>>"$LOG" || true
+  # auto-allowlist the successful task
+  "$HOME/codex/bin/allowlist-add" "$task" 2>>"$LOG" || true
 else
   echo "❌ fail → rewind" | tee -a "$LOG"
   "$HOME/codex/bin/sands-rewind" 2>>"$LOG" || true
