@@ -1,24 +1,9 @@
 #!/data/data/com.termux/files/usr/bin/bash
 set -euo pipefail
-PATFILE="$HOME/codex/allowlist.patterns"
-mkdir -p "$(dirname "$PATFILE")"
-touch "$PATFILE"
-
-task="${1:-}"
-[ -n "$task" ] || exit 0
-
-# If given a relative path, prefer absolute
-case "$task" in
-  /*) abs="$task" ;;
-  *)  abs="$(cd "$(dirname "$task")" 2>/dev/null && pwd)/$(basename "$task")" || abs="$task" ;;
-esac
-
-# Escape for regex and allow trailing args
-# Turn / into \/ and escape regex metacharacters
-esc="$(printf '%s' "$abs" | sed -E 's/[.[\]{}()^$+*?|\\]/\\&/g; s_/_\\/_g')"
-regex="^[[:space:]]*${esc}(\\s|\$)"
-
-# Only append if not present
-if ! grep -qF "$regex" "$PATFILE"; then
-  printf '%s\n' "$regex" >> "$PATFILE"
-fi
+PAT="$HOME/codex/allowlist.patterns"
+abs=$(realpath -m "${1:?path-to-script}")   # e.g. ~/codex/do_the_thing.sh
+# escape for regex and sed
+esc=$(printf '%s' "$abs" | sed -e 's/[.[\*^$()+{}?\/|\\]/\\&/g' -e 's/ /\\ /g' -e 's/_/\\_/g')
+printf '^[[[:space:]]]*%s(\\s|$)\n' "$esc" >> "$PAT"
+echo "appended -> $PAT"
+tail -n 1 "$PAT"
