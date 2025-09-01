@@ -1,0 +1,10 @@
+^[[:space:]]*#.*$
+^[[:space:]]*$
+^[[:space:]]*run[[:space:]]+good[[:space:]]+seed
+^[[:space:]]*echo(\s|$)
+^[[:space:]]*(cd|true|false|printf|date|whoami)(\s|$)
+^[[:space:]]*(mkdir|rmdir|touch|rm -f|mv -f|cp -f|ln -s)(\s|$)
+^[[:space:]]*(sed|awk|grep|cut|tr|sort|uniq)(\s|$)
+^[[:space:]]*(dos2unix|unix2dos)(\s|$)
+^[[:space:]]*(tar|rsync|git|tmux)(\s|$)
+^[[:space:]]*(bash|sh|python3|node|deno|curl|wget)(\s|$)

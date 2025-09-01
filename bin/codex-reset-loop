@@ -1,0 +1,51 @@
+#!/data/data/com.termux/files/usr/bin/bash
+set -euo pipefail
+ROOT="$HOME/codex"
+LOG="$ROOT/logs/reset.log"
+SESSION="codex-loop"
+
+echo "=== codex-reset-loop @ $(date -Is) ===" | tee -a "$LOG"
+
+# 1) Stop loop (tmux)
+if command -v tmux >/dev/null 2>&1; then
+  tmux has-session -t "$SESSION" 2>/dev/null && {
+    echo "[reset] stopping tmux session: $SESSION" | tee -a "$LOG"
+    tmux kill-session -t "$SESSION" || true
+  }
+else
+  echo "[reset] tmux not installed (skipping stop)" | tee -a "$LOG"
+fi
+
+# 2) Rewind to last-ok (safe if absent)
+if command -v "$ROOT/bin/sands-rewind" >/dev/null 2>&1; then
+  echo "[reset] rewinding to last-ok (if any)" | tee -a "$LOG"
+  "$ROOT/bin/sands-rewind" | tee -a "$LOG"
+else
+  echo "[reset] sands-rewind not found—skipping" | tee -a "$LOG"
+fi
+
+# 3) Quiet the workspace (keep artifacts, trim noise)
+mkdir -p "$ROOT/queue" "$ROOT/logs"
+# move any half-processed items aside (leave queue empty)
+mkdir -p "$ROOT/QUEUE_STASH"
+shopt -s nullglob
+for f in "$ROOT/queue/"*; do
+  mv -f "$f" "$ROOT/QUEUE_STASH/" 2>/dev/null || true
+done
+# trim oversized/old logs but keep recent context
+find "$ROOT/logs" -type f -size +5M -delete 2>/dev/null || true
+find "$ROOT/logs" -type f -mtime +7 -delete 2>/dev/null || true
+
+# 4) Optional restart
+if [[ "${1:-}" == "start" ]]; then
+  if command -v tmux >/dev/null 2>&1; then
+    echo "[reset] starting tmux session: $SESSION" | tee -a "$LOG"
+    tmux new -ds "$SESSION" "$ROOT/run-loop.sh"
+  else
+    echo "[reset] tmux not installed—cannot auto-start loop" | tee -a "$LOG"
+  fi
+else
+  echo "[reset] loop NOT restarted (run with 'start' to auto-start)" | tee -a "$LOG"
+fi
+
+echo "[reset] done." | tee -a "$LOG"

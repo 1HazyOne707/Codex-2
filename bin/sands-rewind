@@ -1,0 +1,13 @@
+#!/data/data/com.termux/files/usr/bin/bash
+set -euo pipefail
+cd "$HOME/codex"
+
+if git rev-parse -q --verify last-ok >/dev/null 2>&1; then
+  git reset --hard last-ok >/dev/null
+  echo "[rewind] restored to tag last-ok"
+elif git rev-parse -q --verify HEAD~1 >/dev/null 2>&1; then
+  git reset --hard HEAD~1 >/dev/null
+  echo "[rewind] restored to previous commit (no last-ok tag yet)"
+else
+  echo "[rewind] nothing to rewind to."
+fi

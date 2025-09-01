@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+KEEP="${1:-10}"
+DIR="$HOME/codex/superseed"
+mapfile -t ALL < <(ls -t "$DIR"/superseed-*.tar.gz 2>/dev/null || true)
+[[ ${#ALL[@]} -gt "$KEEP" ]] || { echo "Nothing to prune (have ${#ALL[@]}, keep $KEEP)."; exit 0; }
+to_delete=("${ALL[@]:$KEEP}")
+printf "Pruning %d snapshot(s):\n" "${#to_delete[@]}"
+printf '  %s\n' "${to_delete[@]}"
+read -r -p "Type 'prune' to confirm: " ok
+[[ "$ok" == "prune" ]] || { echo "Aborted."; exit 1; }
+rm -f -- "${to_delete[@]}"
+echo "Pruned."

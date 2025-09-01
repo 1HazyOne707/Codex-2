@@ -1,0 +1,12 @@
+#!/system/bin/sh
+ROOT="$HOME/codex"
+STASH="$ROOT/QUEUE_STASH"
+Q="$ROOT/queue"
+
+mkdir -p "$Q"
+for f in "$STASH"/*; do
+  [ -f "$f" ] || continue
+  base="$(basename "$f" | sed 's/^[0-9_]*__//')"   # strip timestamp
+  mv -f "$f" "$Q/$base"
+  echo "[restore] $(date -Is) -> $base" >>"$ROOT/logs/stash.log"
+done

@@ -1,0 +1,111 @@
+#!/data/data/com.termux/files/usr/bin/bash
+set -euo pipefail
+ROOT="$HOME/codex"
+Q="$ROOT/queue"
+STASH="$ROOT/QUEUE_STASH"
+LOG="$ROOT/logs/stash.log"
+
+usage() {
+  cat <<USAGE
+codex-stash-restore [--list] [--purge] [--all] [--count N] [--match REGEX] [--dry-run]
+  --list        Show items in stash
+  --purge       Delete ALL items in stash (asks to confirm)
+  --all         Restore all items (can combine with --match)
+  --count N     Restore at most N items (default: 1) (ignored with --all)
+  --match REGEX Only restore items whose filename matches REGEX
+  --dry-run     Show what would be restored without moving files
+USAGE
+}
+
+# defaults
+MODE="restore"
+COUNT=1
+MATCH=""
+DRYRUN=0
+
+# parse args
+while (( $# )); do
+  case "$1" in
+    --list) MODE="list" ;;
+    --purge) MODE="purge" ;;
+    --all) COUNT=0 ;;                 # 0 means "no limit"
+    --count) shift; COUNT="${1:-1}" ;;
+    --match) shift; MATCH="${1:-}" ;;
+    --dry-run) DRYRUN=1 ;;
+    -h|--help) usage; exit 0 ;;
+    *) echo "Unknown arg: $1"; usage; exit 1 ;;
+  esac
+  shift
+done
+
+mkdir -p "$Q" "$STASH" "$(dirname "$LOG")"
+
+ts(){ date -Is; }
+
+list_items() {
+  if [ -n "$MATCH" ]; then
+    ls -1 "$STASH" 2>/dev/null | grep -E "$MATCH" || true
+  else
+    ls -1 "$STASH" 2>/dev/null || true
+  fi
+}
+
+if [ "$MODE" = "list" ]; then
+  echo "=== STASH LIST ($(ts)) ==="
+  list_items
+  exit 0
+fi
+
+if [ "$MODE" = "purge" ]; then
+  echo "⚠️  This will DELETE all files in $STASH"
+  read -r -p "Type 'purge' to confirm: " ans
+  if [ "$ans" = "purge" ]; then
+    find "$STASH" -type f -print -delete
+    echo "Purged stash @ $(ts)" >>"$LOG"
+    echo "Purged."
+  else
+    echo "Aborted."
+  fi
+  exit 0
+fi
+
+# restore mode
+mapfile -t CANDIDATES < <(list_items)
+if [ "${#CANDIDATES[@]}" -eq 0 ]; then
+  echo "No items in stash."
+  exit 0
+fi
+
+TO_RESTORE=()
+if [ "$COUNT" -eq 0 ]; then
+  TO_RESTORE=("${CANDIDATES[@]}")
+else
+  # restore oldest first
+  while IFS= read -r f; do TO_RESTORE+=("$f"); done < <(
+    printf '%s\n' "${CANDIDATES[@]}" \
+      | while read -r n; do printf "%s\t%s\n" "$(stat -c %Y "$STASH/$n" 2>/dev/null || echo 0)" "$n"; done \
+      | sort -n | cut -f2 \
+      | head -n "$COUNT"
+  )
+fi
+
+echo "=== RESTORE PLAN ($(ts)) ==="
+for f in "${TO_RESTORE[@]}"; do
+  echo "  $STASH/$f  ->  $Q/$f"
+done
+
+if [ "$DRYRUN" -eq 1 ]; then
+  echo "(dry-run) nothing moved."
+  exit 0
+fi
+
+for f in "${TO_RESTORE[@]}"; do
+  src="$STASH/$f"
+  dst="$Q/$f"
+  if [ -f "$src" ]; then
+    mv -f "$src" "$dst"
+    echo "[restore] $(ts) $f" >>"$LOG"
+  fi
+done
+
+echo "Restored ${#TO_RESTORE[@]} file(s) to queue."

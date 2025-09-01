@@ -1,0 +1,21 @@
+# comments / blanks
+^[[:space:]]*#.*$
+^[[:space:]]*$
+
+# seed verbs and echo
+^[[:space:]]*run[[:space:]]+good[[:space:]]+seed
+^[[:space:]]*echo(\s|$)
+
+# safe shell builtins / utils (single command, no pipes)
+^[[:space:]]*(cd|true|false|printf|date|whoami)(\s|$)
+^[[:space:]]*(mkdir|rmdir|touch|rm -f|mv -f|cp -f|ln -s)(\s|$)
+
+# text tools (single command)
+^[[:space:]]*(sed|awk|grep|cut|tr|sort|uniq)(\s|$)
+^[[:space:]]*(dos2unix|unix2dos)(\s|$)
+
+# archive / sync / vcs / tmux
+^[[:space:]]*(tar|rsync|git|tmux)(\s|$)
+
+# interpreters / fetchers (single command)
+^[[:space:]]*(bash|sh|python3|node|deno|curl|wget)(\s|$)

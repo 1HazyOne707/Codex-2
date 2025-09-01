@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$HOME/codex"
+SEED="$ROOT/superseed/superseed.txt"
+LOG="$ROOT/logs/superseed.log"
+
+ts(){ date -Is; }
+
+# snapshot current state of codex
+echo "[superseed] $(ts) saving snapshot" >>"$LOG"
+
+# tar up codex state (excluding stash to avoid recursion)
+tar --exclude="$ROOT/QUEUE_STASH" -czf "$ROOT/superseed/superseed-$(date +%Y%m%d_%H%M%S).tar.gz" "$ROOT"
+
+# update pointer to latest
+echo "$(ts)" > "$SEED"
+echo "[superseed] saved successfully at $(ts)" >>"$LOG"

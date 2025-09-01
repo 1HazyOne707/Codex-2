@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="$HOME/codex"
+DIR="$ROOT/superseed"
+LOG="$ROOT/logs/superseed.log"
+mkdir -p "$ROOT/logs"
+
+ts(){ date -Is; }
+
+usage(){
+  cat <<USAGE
+Usage:
+  superseed-sprout           # restore the latest snapshot
+  superseed-sprout --list    # show snapshots (same as superseed-list)
+  superseed-sprout <N>       # restore by numbered index from --list (1 = newest)
+  superseed-sprout <path>    # restore from specific .tar.gz file
+  superseed-sprout --dry-run <N|path>   # show what would be restored
+USAGE
+}
+
+# collect ordered list (newest first)
+mapfile -t SNAPS < <(ls -t "$DIR"/superseed-*.tar.gz 2>/dev/null || true)
+
+# flags
+DRY=0
+if [[ "${1:-}" == "--list" ]]; then
+  exec "$ROOT/bin/superseed-list"
+elif [[ "${1:-}" == "--dry-run" ]]; then
+  DRY=1; shift || true
+fi
+
+target=""
+arg="${1:-}"
+
+if [[ -z "$arg" ]]; then
+  [[ ${#SNAPS[@]} -gt 0 ]] || { echo "[superseed] $(ts) no snapshot to sprout" | tee -a "$LOG"; exit 1; }
+  target="${SNAPS[0]}"
+elif [[ "$arg" =~ ^[0-9]+$ ]]; then
+  idx=$((arg-1))
+  [[ $idx -ge 0 && $idx -lt ${#SNAPS[@]} ]] || { echo "Index out of range."; exit 2; }
+  target="${SNAPS[$idx]}"
+else
+  [[ -f "$arg" ]] || { echo "File not found: $arg"; exit 3; }
+  target="$arg"
+fi
+
+echo "[superseed] $(ts) sprout from: $target" | tee -a "$LOG"
+
+if [[ $DRY -eq 1 ]]; then
+  echo "[superseed] (dry-run) would run: tar -xzf '$target' -C '$HOME'"
+  exit 0
+fi
+
+tar -xzf "$target" -C "$HOME"
+
+echo "[superseed] $(ts) sprout completed successfully" | tee -a "$LOG"

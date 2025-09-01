@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="$HOME/codex"; L="$ROOT/logs/runner.log"; STAMP="$ROOT/logs/breaker.stamp"
+MAX_FAILS=${1:-3}      # trip after N fails
+WINDOW=${2:-120}       # within last M seconds
+
+fails=$(grep -F "fail → rewind" "$L" 2>/dev/null \
+  | awk -v now="$(date +%s)" -v win="$WINDOW" '
+      { gsub(/.*@ /,"",$0); t=$0; gsub(/[TZ-:]/," ",t);
+        cmd="date -ud \""$0"\" +%s"; cmd|getline s; close(cmd);
+        if (now-s<=win) c++ } END{print c+0}')
+
+if [ "${fails:-0}" -ge "$MAX_FAILS" ]; then
+  echo "[breaker] trip: $fails fails in ${WINDOW}s — pausing loop."
+  tmux kill-session -t codex-loop 2>/dev/null || true
+  date -Is > "$STAMP"
+  exit 1
+else
+  echo "[breaker] ok: $fails fails in ${WINDOW}s"
+fi

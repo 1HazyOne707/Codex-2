@@ -1,0 +1,1 @@
+/data/data/com.termux/files/home/codex/do_the_thing.sh
