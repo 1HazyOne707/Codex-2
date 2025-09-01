@@ -27,3 +27,4 @@
 ^[[:space:]]*/data/data/com.termux/files/home/codex/do_the_thing\.sh(\s|$)
 ^[[:space:]]*/data/data/com.termux/files/home/codex/tasks\.d/.*(\s|$)
 ^[[:space:]]*/data/data/com.termux/files/home/codex/bin/.*(\s|$)
+^[[:space:]]*/data/data/com\.termux/files/home/codex/do_the_thing\.sh(\s|$)
