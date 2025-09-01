@@ -1,0 +1,16 @@
+#!/data/data/com.termux/files/usr/bin/bash
+set -euo pipefail
+LOGDIR="$HOME/codex/logs"
+MAX=200000   # ~200 KB per log before trim
+KEEP=100000  # keep last ~100 KB
+mkdir -p "$LOGDIR"
+for f in "$LOGDIR"/*.log; do
+  [ -f "$f" ] || continue
+  size=$(wc -c <"$f" 2>/dev/null || echo 0)
+  if [ "$size" -gt "$MAX" ]; then
+    tail -c "$KEEP" "$f" > "$f.tmp" 2>/dev/null || true
+    mv -f "$f.tmp" "$f"
+    echo "[trim] $(date -Is) $f -> kept last $KEEP bytes" >> "$f"
+  fi
+done
+echo "done."
