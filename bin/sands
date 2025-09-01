@@ -1,0 +1,49 @@
+#!/data/data/com.termux/files/usr/bin/bash
+set -euo pipefail
+ROOT="${ROOT:-$HOME/codex}"
+cd "$ROOT"
+cmd="${1:-show}"
+
+need_git(){
+  command -v git >/dev/null 2>&1 || { printf '⚠️  installing git...\n'; pkg install git -y >/dev/null 2>&1 || true; }
+  command -v git >/dev/null 2>&1 || { printf '❌ git not available\n' >&2; exit 1; }
+}
+
+init_repo(){
+  need_git
+  [[ -d .git ]] || { git init >/dev/null 2>&1 || true; git config user.email "codex@local"; git config user.name "Codex"; }
+}
+
+bless(){
+  init_repo
+  git add -A >/dev/null 2>&1 || true
+  git commit -m "bless $(date -Iseconds)" >/dev/null 2>&1 || true
+  git rev-parse HEAD >/dev/null 2>&1 && printf "✅ blessed\n"
+}
+
+rewind(){
+  init_repo
+  if git rev-parse HEAD >/dev/null 2>&1; then
+    git reset --hard HEAD >/dev/null 2>&1 || true
+    printf "⏪ rewound to last bless\n"
+  else
+    printf "⚠️  no snapshot yet; nothing to rewind\n"
+  fi
+}
+
+show(){
+  need_git
+  if git rev-parse HEAD >/dev/null 2>&1; then
+    git --no-pager log -1 --pretty='format:🔖 %h %ad %s' --date=iso || true
+    printf "\n"
+  else
+    printf "total 0\n"
+  fi
+}
+
+case "$cmd" in
+  bless)  bless ;;
+  rewind) rewind ;;
+  show|status) show ;;
+  *) printf "sands {show|bless|rewind}\n" ;;
+esac
