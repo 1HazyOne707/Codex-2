@@ -19,3 +19,4 @@
 
 # interpreters / fetchers (single command)
 ^[[:space:]]*(bash|sh|python3|node|deno|curl|wget)(\s|$)
+^[[:space:]]*/data/data/com.termux/files/home/codex/do_the_thing.sh(\s|$)
