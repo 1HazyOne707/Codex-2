@@ -1,47 +1,16 @@
 #!/data/data/com.termux/files/usr/bin/bash
 set -euo pipefail
-cd "$HOME/codex"
-
-echo "=== Codex Status @ $(date -Is) ==="
-
-# Git / bless info
-if git rev-parse --git-dir >/dev/null 2>&1; then
-  last_commit=$(git log -1 --pretty=format:'%h %s (%cr)')
-  count=$(git rev-list --count HEAD)
-  tag=$(git tag -l --points-at HEAD | tr '\n' ' ')
-  echo "Blesses : $count"
-  echo "Last    : $last_commit"
-  echo "Tag     : ${tag:-none}"
-else
-  echo "Git repo not initialized."
-fi
-
-# Loop runner info
-if command -v tmux >/dev/null 2>&1; then
-  if tmux has-session -t codex-loop 2>/dev/null; then
-    echo "Loop    : ACTIVE (tmux session codex-loop)"
-  else
-    echo "Loop    : not running"
-  fi
-fi
-
-# Logs + heartbeat check
-LOG="$HOME/codex/logs/loop.log"
-if [ -f "$LOG" ]; then
-  echo "--- tail $LOG ---"
-  tail -n 3 "$LOG"
-  last_line=$(grep "heartbeat" "$LOG" | tail -n 1)
-  if [ -n "$last_line" ]; then
-    hb_time=$(echo "$last_line" | sed -E 's/.*heartbeat @ (.*)/\1/')
-    now=$(date -u +%s)
-    hb_epoch=$(date -ud "$hb_time" +%s 2>/dev/null || echo 0)
-    diff=$(( now - hb_epoch ))
-    if (( diff > 120 )); then
-      echo "⚠️  WARNING: Last heartbeat $diff seconds ago (stale!)"
-    else
-      echo "✅ Heartbeat fresh ($diff seconds ago)"
-    fi
-  else
-    echo "⚠️  No heartbeat entries yet."
-  fi
-fi
+ROOT="$HOME/codex"
+echo "== Codex Status =="
+git -C "$ROOT" --no-pager log -1 --pretty='last bless commit: %h %ad %s' 2>/dev/null || echo "no git history yet"
+echo
+echo "-- runner tail --"
+tail -n 15 "$ROOT/logs/runner.log" 2>/dev/null || echo "(no runner.log)"
+echo
+echo "-- counts --"
+q="$ROOT/queue"; s="$ROOT/QUEUE_STASH"
+printf "queue: "; [ -d "$q" ] && ls -1A "$q" | wc -l || echo 0
+printf "stash: "; [ -d "$s" ] && ls -1A "$s" | wc -l || echo 0
+echo
+echo "-- disk --"
+df -h | sed -n '1,3p'
