@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Codex • Spiral Gate</title>
+  <style>
+    html,body{height:100%;margin:0;background:#05090c;color:#e8f1f0;font-family:system-ui}
+    #ui{position:fixed;inset:0;pointer-events:none}
+    .hud{position:fixed;top:10px;left:10px;background:#0b1417cc;border:1px solid #17262c;padding:8px 10px;border-radius:10px;font-size:12px}
+    .center{position:fixed;inset:0;display:grid;place-items:center}
+    .btn{pointer-events:auto;background:#34d399;color:#052;font-weight:800;border:0;border-radius:12px;padding:10px 16px;cursor:pointer}
+    #veil{position:fixed;inset:0;background:#05090c;opacity:0;transition:opacity .8s ease;pointer-events:none}
+    #veil.show{opacity:1}
+    #notice{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:12px;opacity:.75}
+  </style>
+</head>
+<body>
+  <div id="ui">
+    <div class="hud" id="hud">Spiral Gate • <span id="role">watch</span> • WASD/drag, click to lock</div>
+    <div class="center" id="center">
+      <button class="btn" id="enter">Enter the Gate</button>
+    </div>
+    <div id="veil"></div>
+    <div id="notice">Esc to release pointer • Tap twice on mobile to engage</div>
+  </div>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
