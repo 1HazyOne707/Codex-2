@@ -112,7 +112,7 @@ function tick(){ step(); draw(); requestAnimationFrame(tick); }
 function linkify(){ const id2 = new Map(W.nodes.map(n=>[n.id,n])); W.links.forEach(e=>{ e.source=id2.get(e.source); e.target=id2.get(e.target); }); }
 
 async function load(){
-  const res = await fetch('/data/seed.json', { cache:'no-store' });
+  const res = await fetch('/api/seed', { cache:'no-store' });
   const j = await res.json(); Object.assign(W,j);
   metaEl.textContent = `${j.meta?.name} • ${j.meta?.updated||''}`;
   statsEl.textContent = `nodes:${W.nodes.length} links:${W.links.length} jobs:${W.jobs?.length||0}`;
