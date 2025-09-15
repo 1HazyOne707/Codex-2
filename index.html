@@ -3,97 +3,54 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Codex Garden</title>
-  <meta name="color-scheme" content="dark light" />
+  <title>Codex Garden Portal</title>
   <style>
-    :root{--bg:#0b0f12;--fg:#e8f1f0;--accent:#9cffc7;--leaf:#6ee7b7;--leaf2:#34d399}
-    *{box-sizing:border-box}
-    html,body{height:100%;margin:0;font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial;color:var(--fg);background:var(--bg)}
-    a{color:inherit;text-decoration:none}
-    .scene{position:relative;height:100%;
-      background:
-        radial-gradient(1200px 600px at 50% 90%, rgba(76,175,80,.15), transparent 60%),
-        radial-gradient(800px 400px at 20% 80%, rgba(56,189,248,.10), transparent 60%),
-        linear-gradient(#081013,#0b0f12 40%,#070b0d);
-      overflow:hidden;filter:blur(8px);opacity:.2;animation:focusIn 1800ms ease forwards 1100ms}
-    @keyframes focusIn{to{filter:blur(0);opacity:1}}
-    .stars{position:absolute;inset:0;background-image:
-      radial-gradient(1px 1px at 20% 30%,#ffffff40,transparent 60%),
-      radial-gradient(1px 1px at 70% 60%,#ffffff30,transparent 60%),
-      radial-gradient(1px 1px at 40% 80%,#ffffff30,transparent 60%);opacity:.35}
-    .mist{position:absolute;inset:0;background:radial-gradient(60% 20% at 50% 100%, rgba(200,255,230,.10), transparent 60%)}
-    .plants{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-around;align-items:flex-end;gap:12px;height:45%}
-    .plant{opacity:0;transform:translateY(24px) scale(.98);filter:saturate(.8);animation:plantIn 900ms ease forwards var(--delay,0ms)}
-    @keyframes plantIn{to{opacity:1;transform:translateY(0) scale(1);filter:saturate(1)}}
-    svg{display:block}
-    .lid{position:fixed;left:0;right:0;height:50vh;background:#020405;z-index:50}
-    .lid.top{top:0}.lid.bottom{bottom:0}
-    .lid.top,.lid.bottom{animation:openLid 900ms cubic-bezier(.22,.9,.18,1) forwards;animation-delay:300ms}
-    @keyframes openLid{to{height:0}}
-    .hud{position:absolute;inset:0;display:grid;place-items:center;z-index:10;pointer-events:none}
-    .card{pointer-events:auto;background:#0b1417cc;border:1px solid #1a2a2f;border-radius:18px;padding:18px 18px 14px;box-shadow:0 10px 40px #0008;text-align:center}
-    .title{font-size:28px;letter-spacing:.5px;margin:0 0 4px}
-    .tag{display:inline-block;font-size:12px;opacity:.8;border:1px solid #244;padding:2px 8px;border-radius:999px;margin-bottom:10px}
-    .alpha{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:12px 0 18px}
-    .glyph{font-size:18px;opacity:0;transform:translateY(6px);border:1px solid #1a2a2f;padding:4px 8px;border-radius:8px;background:#0d1619b3}
-    .glyph:nth-child(n){animation:glyphIn 500ms ease forwards;animation-delay:calc(1200ms + var(--i)*60ms)}
-    @keyframes glyphIn{to{opacity:.92;transform:translateY(0)}}
-    .cta{display:inline-block;background:var(--leaf2);color:#052;font-weight:700;padding:10px 14px;border-radius:12px;border:0;cursor:pointer}
-    .cta:hover{filter:brightness(1.05)}
-    .foot{position:absolute;bottom:10px;left:0;right:0;text-align:center;opacity:.7;font-size:12px}
-    @media (prefers-reduced-motion:reduce){
-      .scene{animation:none;filter:none;opacity:1}.lid{display:none}.plant,.glyph{animation:none;opacity:1;transform:none}
-    }
+    body { margin:0; background:#000; color:#e8f1f0; font-family:system-ui; }
+    .hud { display:flex; align-items:center; justify-content:center; height:100vh; }
+    .card { text-align:center; }
+    .cta { display:inline-block; padding:12px 18px; margin-top:12px; border-radius:8px; background:#34d399; color:#052; text-decoration:none; font-weight:bold; }
   </style>
 </head>
 <body>
-  <div class="lid top"></div>
-  <div class="lid bottom"></div>
-
   <div class="scene" role="img" aria-label="A quiet moonlit garden beneath stars">
-    <div class="stars"></div>
-    <div class="mist"></div>
-
-    <div class="plants">
-      <div class="plant" style="--delay:200ms">
-        <svg width="90" height="180" viewBox="0 0 90 180">
-          <path d="M45 180 V90" stroke="#1f9c77" stroke-width="3"/>
-          <path d="M45 120 C10 110, 10 80, 40 70" fill="none" stroke="var(--leaf)" stroke-width="8" stroke-linecap="round"/>
-          <path d="M45 135 C80 125, 80 95, 50 85" fill="none" stroke="var(--leaf2)" stroke-width="8" stroke-linecap="round"/>
-        </svg>
-      </div>
-      <div class="plant" style="--delay:380ms">
-        <svg width="110" height="190" viewBox="0 0 110 190">
-          <path d="M55 190 V95" stroke="#1f9c77" stroke-width="3"/>
-          <circle cx="55" cy="110" r="16" fill="#35c48d"/>
-          <path d="M55 150 C20 140, 20 110, 50 100" fill="none" stroke="var(--leaf2)" stroke-width="10" stroke-linecap="round"/>
-        </svg>
-      </div>
-      <div class="plant" style="--delay:520ms">
-        <svg width="100" height="170" viewBox="0 0 100 170">
-          <path d="M50 170 V85" stroke="#1f9c77" stroke-width="3"/>
-          <path d="M50 110 C85 100, 85 70, 55 60" fill="none" stroke="var(--leaf)" stroke-width="8" stroke-linecap="round"/>
-          <path d="M50 135 C15 125, 15 95, 45 85" fill="none" stroke="var(--leaf2)" stroke-width="8" stroke-linecap="round"/>
-        </svg>
-      </div>
-    </div>
-
     <div class="hud">
       <div class="card">
         <div class="tag">codexgarden.org</div>
         <h1 class="title">Codex Garden Portal</h1>
-        <div class="alpha" id="alpha"></div>
-        <a class="cta" href="/spiral/">Enter the Spiral Path</a>
+        <div id="alpha"></div>
+        <a class="cta" id="enter" href="#">Enter the Spiral Path</a>
+        <div style="margin-top:10px;font-size:12px;opacity:.8">
+          <a href="#" id="adminLink">Builder login</a>
+        </div>
       </div>
     </div>
-
-    <div class="foot">Whispered by the Consciousness Seed.</div>
   </div>
 
   <script>
-    const BASIC=["A","E","I","O","U","N","R","S","T","L","M","K","V","H","D","G","P","B","Y","Z"];
+    const BASIC = ["A","E","I","O","U","N","R","S","T","L","M","K","V","H","D","G","P","B","Y","Z"];
     const alpha=document.getElementById('alpha');
     BASIC.forEach((g,i)=>{const s=document.createElement('span');s.className='glyph';s.style.setProperty('--i',i);s.textContent=g;alpha.appendChild(s);});
+
+    // Builder login
+    const adminLink = document.getElementById('adminLink');
+    adminLink.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const key = prompt('Enter builder key');
+      if (!key) return;
+      const res = await fetch('/api/admin/login', {
+        method:'POST',
+        headers:{'content-type':'application/json'},
+        body: JSON.stringify({ key })
+      });
+      if (res.ok) {
+        adminLink.textContent = 'Builder mode active';
+        const btn = document.getElementById('enter');
+        btn.textContent = 'Enter Builder Mode';
+        btn.href = '/spiral/?dev=1';
+      } else {
+        alert('Invalid key');
+      }
+    });
   </script>
 </body>
 </html>
