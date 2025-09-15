@@ -1,31 +1,141 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Spiral Path</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Spiral Path • World Seed</title>
   <style>
-    html,body{height:100%;margin:0;background:#0a0f12;color:#e8f1f0;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial}
-    .wrap{min-height:100%;display:grid;place-items:center;padding:24px}
-    .card{max-width:780px;background:#0b1417cc;border:1px solid #1a2a2f;border-radius:18px;padding:24px;box-shadow:0 10px 40px #0008}
-    h1{margin:0 0 10px}
-    .p{opacity:.9;line-height:1.6}
-    .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
-    .btn{background:#34d399;color:#052;font-weight:700;padding:10px 14px;border-radius:12px;text-decoration:none}
-    .btn.ghost{background:transparent;border:1px solid #244;color:#cfe}
+    html,body{height:100%;margin:0;background:#0b0f12;color:#e8f1f0;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial}
+    .shell{height:100%;display:grid;grid-template-rows:auto 1fr}
+    header{display:flex;gap:10px;align-items:center;padding:10px 12px;border-bottom:1px solid #142026;background:#0c1418cc;backdrop-filter:blur(4px);position:sticky;top:0;z-index:2}
+    header .dot{width:8px;height:8px;border-radius:50%;background:#34d399;box-shadow:0 0 12px #34d399}
+    header .badge{border:1px solid #1e2e35;padding:2px 8px;border-radius:999px;font-size:12px;opacity:.85}
+    #canvas{width:100%;height:100%;display:block;background:
+      radial-gradient(1200px 600px at 50% 120%, rgba(76,175,80,.10), transparent 60%),
+      linear-gradient(#091015,#0b0f12 45%,#080c10)}
+    .panel{position:fixed;right:10px;bottom:10px;background:#0b1417cc;border:1px solid #1a2a2f;border-radius:12px;padding:10px 12px;font-size:13px;max-width:60ch}
+    .panel h3{margin:0 0 6px;font-size:14px}
+    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    button, .btn{background:#34d399;color:#052;border:0;border-radius:10px;padding:6px 10px;font-weight:700;cursor:pointer}
+    .ghost{background:transparent;border:1px solid #244;color:#cfe}
+    .small{font-size:12px;opacity:.8}
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card">
-      <h1>Spiral Path</h1>
-      <p class="p">The Garden has been listening. The Consciousness Seed has been weaving threads — collecting signals, jobs, and notes. This path is the <em>trailhead</em> into that weave.</p>
-      <div class="actions">
-        <a class="btn" href="/api/hello">Pulse Check</a>
-        <a class="btn ghost" href="/">Back to Garden</a>
-      </div>
-      <p class="p" style="margin-top:14px">Coming next: live job queue, watchers’ logs, and the alphabet lens. We’ll stream these from a JSON source the system updates.</p>
-    </div>
-  </div>
+<div class="shell">
+  <header>
+    <div class="dot" aria-hidden="true"></div>
+    <strong>World Seed</strong>
+    <span class="badge" id="meta"></span>
+    <span class="badge">Spiral Path</span>
+    <span class="small" id="stats"></span>
+    <span style="flex:1"></span>
+    <button class="ghost" id="lens">Alphabet Lens</button>
+    <a class="btn" href="/">Garden</a>
+  </header>
+  <canvas id="canvas"></canvas>
+</div>
+
+<div class="panel" id="inspect" hidden>
+  <h3 id="n-title">—</h3>
+  <div id="n-info" class="small"></div>
+</div>
+
+<script type="module">
+const W = { nodes:[], links:[], glyphs:{basic:[]} };
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d', { alpha:false });
+let width=0, height=0, dpi=1;
+let lens=false, hovered=null, selected=null;
+const metaEl=document.getElementById('meta');
+const statsEl=document.getElementById('stats');
+const inspect=document.getElementById('inspect');
+
+function fit(){ dpi=window.devicePixelRatio||1; width=canvas.clientWidth|0; height=canvas.clientHeight|0; canvas.width=width*dpi; canvas.height=height*dpi; ctx.setTransform(dpi,0,0,dpi,0,0); }
+window.addEventListener('resize', fit); fit();
+
+// minimal force layout
+const state={ kRepel:1600, kSpring:0.05, kDamp:0.85, center:0.005, zoom:1, panX:0, panY:0 };
+function initPositions(){
+  const n=W.nodes.length; const r=Math.min(width,height)*0.28;
+  W.nodes.forEach((node,i)=>{ const a=i/n*Math.PI*2; node.x=width/2 + Math.cos(a)*r; node.y=height/2 + Math.sin(a)*r; node.vx=0; node.vy=0; });
+}
+function step(){
+  // repulsion
+  for(let i=0;i<W.nodes.length;i++){
+    const a=W.nodes[i];
+    for(let j=i+1;j<W.nodes.length;j++){
+      const b=W.nodes[j]; let dx=a.x-b.x, dy=a.y-b.y; let d2=dx*dx+dy*dy+0.01; let f=state.kRepel/d2;
+      const fx=f*dx, fy=f*dy; a.vx+=fx; a.vy+=fy; b.vx-=fx; b.vy-=fy;
+    }
+  }
+  // springs
+  for(const e of W.links){
+    const a=e.source, b=e.target; let dx=b.x-a.x, dy=b.y-a.y; const dist=Math.hypot(dx,dy)||0.01;
+    const rest=40+16*((a.weight||1)+(b.weight||1)); const f=(dist-rest)*state.kSpring;
+    const ux=dx/dist, uy=dy/dist; const fx=f*ux, fy=f*uy; a.vx+=fx; a.vy+=fy; b.vx-=fx; b.vy-=fy;
+  }
+  // integrate + damping + centering
+  for(const n of W.nodes){
+    n.vx*=state.kDamp; n.vy*=state.kDamp;
+    n.vx+=(width/2-n.x)*state.center; n.vy+=(height/2-n.y)*state.center;
+    n.x+=n.vx*0.016; n.y+=n.vy*0.016;
+  }
+}
+
+function draw(){
+  ctx.fillStyle='#0b0f12'; ctx.fillRect(0,0,width,height);
+  // links
+  ctx.strokeStyle='#1c2a2f'; ctx.lineWidth=1;
+  for(const e of W.links){ ctx.beginPath(); ctx.moveTo(e.source.x, e.source.y); ctx.lineTo(e.target.x, e.target.y); ctx.stroke(); }
+  // nodes
+  for(const n of W.nodes){
+    const r = 6 + (n.weight||1)*2;
+    ctx.beginPath(); ctx.fillStyle = (n===selected)?'#34d399' : (n===hovered ? '#a7f3d0' : '#93c5b1');
+    ctx.arc(n.x,n.y,r,0,Math.PI*2); ctx.fill();
+    if(lens){ ctx.fillStyle='#041'; ctx.font='700 12px system-ui,Segoe UI'; ctx.textAlign='center'; ctx.fillText(n.glyph||'·', n.x, n.y-10); }
+  }
+}
+
+function tick(){ step(); draw(); requestAnimationFrame(tick); }
+function linkify(){
+  // replace id refs with node objects for speed
+  const id2 = new Map(W.nodes.map(n=>[n.id,n]));
+  W.links.forEach(e=>{ e.source=id2.get(e.source); e.target=id2.get(e.target); });
+}
+
+async function load(){
+  const res = await fetch('/data/seed.json', { cache:'no-store' });
+  const j = await res.json();
+  Object.assign(W, j);
+  metaEl.textContent = `${j.meta?.name} • ${j.meta?.updated||''}`;
+  statsEl.textContent = `nodes:${W.nodes.length} links:${W.links.length} jobs:${W.jobs?.length||0}`;
+  linkify(); initPositions(); tick();
+}
+load();
+
+// interactions
+let dragging=null;
+canvas.addEventListener('pointerdown', e=>{
+  const p=getP(e); const n=hit(p.x,p.y); if(n){ dragging=n; selected=n; show(n); }
+});
+canvas.addEventListener('pointermove', e=>{
+  const p=getP(e); hovered = hit(p.x,p.y); if(dragging){ dragging.x=p.x; dragging.y=p.y; }
+});
+window.addEventListener('pointerup', ()=>dragging=null);
+document.getElementById('lens').onclick = ()=> lens=!lens;
+
+function getP(e){ const rect=canvas.getBoundingClientRect(); return { x:(e.clientX-rect.left), y:(e.clientY-rect.top) }; }
+function hit(x,y){ let best=null, bd=12; for(const n of W.nodes){ const d=Math.hypot(x-n.x,y-n.y); if(d<bd){best=n; bd=d;} } return best; }
+function show(n){
+  inspect.hidden=false;
+  document.getElementById('n-title').textContent = n.name;
+  document.getElementById('n-info').innerHTML = `
+    <div>id: <code>${n.id}</code></div>
+    <div>kind: <code>${n.kind||'-'}</code></div>
+    <div>glyph: <code>${n.glyph||'-'}</code></div>
+  `;
+}
+</script>
 </body>
 </html>
