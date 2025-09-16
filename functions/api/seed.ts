@@ -1,25 +1,15 @@
-import { DEFAULT_SEED } from "../_lib/defaultSeed";
-
-interface Env { Codex_KV: KVNamespace }
+export interface Env { Codex_KV: KVNamespace, ADMIN_KEY?: string }
 
 export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
-  let seed = await env.Codex_KV.get("seed", "json").catch(() => null);
-
-  if (!seed) {
-    // if missing, auto-restore default
-    seed = DEFAULT_SEED;
-    await env.Codex_KV.put("seed", JSON.stringify(seed));
-  }
-
-  return new Response(JSON.stringify(seed), {
-    headers: { "content-type": "application/json" }
-  });
+  const text = await env.Codex_KV.get('seed','text');
+  return new Response(text ?? JSON.stringify({ nodes:[], links:[], meta:{} }), { headers:{'content-type':'application/json'} });
 };
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
-  const body = await request.json().catch(() => ({}));
-  await env.Codex_KV.put("seed", JSON.stringify(body));
-  return new Response(JSON.stringify({ ok:true, saved: body }), {
-    headers: { "content-type": "application/json" }
-  });
+  const isAdmin = (request.headers.get('cookie')||'').includes('codex_admin=1') ||
+                  request.headers.get('x-admin-key') === (env.ADMIN_KEY || '');
+  if (!isAdmin) return new Response(JSON.stringify({ok:false,reason:'admin-only'}),{status:403,headers:{'content-type':'application/json'}});
+  const body = await request.text();
+  await env.Codex_KV.put('seed', body);
+  return new Response(JSON.stringify({ok:true}),{headers:{'content-type':'application/json'}});
 };

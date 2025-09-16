@@ -1,0 +1,28 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Garden</title>
+<style>
+:root{--bg:#07131b}
+*{box-sizing:border-box}html,body{height:100%;margin:0;background:radial-gradient(1400px 900px at 50% -260px,#0b2736,var(--bg));color:#dff7ee;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial}
+.stage{position:relative;width:100%;height:100%;overflow:hidden}
+.spr{--x:.5;--y:.7;--h:90px;--d:0ms;position:absolute;left:calc(var(--x)*100%);top:calc(var(--y)*100%);width:0;height:var(--h);transform-origin:bottom center;translate:-2px calc(-1*var(--h));animation:appear .9s ease-out var(--d) both,sway 6s ease-in-out calc(var(--d)+.8s) infinite alternate}
+.spr::before{content:"";display:block;width:4px;height:100%;border-radius:3px;background:linear-gradient(180deg,rgba(126,243,182,.0),rgba(126,243,182,.35) 25%,rgba(126,243,182,.92));box-shadow:0 0 10px rgba(126,243,182,.35)}
+@keyframes appear{from{opacity:0;height:0}to{opacity:1;height:var(--h)}}
+@keyframes sway{from{transform:rotate(-2deg)}to{transform:rotate(2deg)}}
+</style></head><body>
+<div class="stage" id="stage"></div>
+<script>
+const stage=document.getElementById('stage');
+function clamp01(v){return Math.max(0,Math.min(1,v))}
+function draw(nodes){
+  [...stage.querySelectorAll('.spr')].forEach(n=>n.remove());
+  const list=(Array.isArray(nodes)&&nodes.length?nodes.map(n=>({x:(typeof n.x==='number'?n.x:Math.random()),y:(typeof n.y==='number'?n.y:Math.random()),h:60+Math.random()*110})) : Array.from({length:28},(_,i)=>({x:(i+1)/(28+2)+(Math.random()-.5)*.03,y:.65+Math.random()*.25,h:60+Math.random()*100})));
+  list.forEach((p,i)=>{const e=document.createElement('i');e.className='spr';e.style.setProperty('--x',clamp01(p.x));e.style.setProperty('--y',clamp01(p.y));e.style.setProperty('--h',p.h+'px');e.style.setProperty('--d',(80*i)+'ms');stage.appendChild(e)})
+}
+async function load(){
+  try{const r=await fetch('/api/seed',{cache:'no-store'});const s=await r.json();draw(s&&s.nodes?s.nodes:null)}
+  catch(_){draw(null)}
+}
+load(); setInterval(load,5000);
+</script>
+</body></html>

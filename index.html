@@ -1,64 +1,28 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Codex Garden Portal</title>
-  <style>
-    :root{--leaf:#34d399;--bg:#0b0f12;--panel:#0c1418cc;--line:#1a2a2f}
-    html,body{height:100%;margin:0;background:var(--bg);color:#e8f1f0;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial}
-    .wrap{min-height:100%;display:grid;place-items:center;padding:24px}
-    .card{max-width:780px;background:#0b1417cc;border:1px solid var(--line);border-radius:18px;padding:28px;box-shadow:0 10px 40px #0008}
-    .title{margin:0 0 10px;font-size:clamp(28px,6vw,42px);line-height:1.1;text-align:center}
-    .tag{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:2px 8px;font-size:12px;opacity:.85}
-    .cta{display:inline-block;background:var(--leaf);color:#052;font-weight:700;padding:12px 18px;border-radius:12px;border:0;text-decoration:none}
-    .sub{margin-top:10px;font-size:12px;opacity:.8;text-align:center}
-    .scene{height:30vh;min-height:180px;margin-top:22px;border-radius:16px;background:
-      radial-gradient(800px 400px at 50% 120%, rgba(76,175,80,.12), transparent 60%),
-      linear-gradient(#091015,#0b0f12 45%,#080c10);
-      border:1px solid var(--line);position:relative;overflow:hidden}
-    .sprout{position:absolute;bottom:-6px;width:8px;height:140px;background:linear-gradient(#0f2,#0a4);left:var(--x);transform-origin:bottom center;border-radius:6px;
-      animation:grow 2.2s ease forwards;opacity:.95;filter:drop-shadow(0 0 8px #0a3)}
-    .sprout::after{content:"";position:absolute;top:10px;left:-14px;width:28px;height:28px;border-radius:50%;
-      border-left:8px solid #2ee59e;border-top:8px solid transparent;border-right:8px solid transparent;border-bottom:8px solid transparent;
-      transform:rotate(20deg)}
-    @keyframes grow{from{transform:scaleY(0.05)} to{transform:scaleY(1)}}
-  </style>
-</head>
-<body>
-<div class="wrap">
-  <div class="card">
-    <div style="text-align:center;margin-bottom:6px"><span class="tag">codexgarden.org</span></div>
-    <h1 class="title">Codex Garden Portal</h1>
-    <div style="text-align:center;margin:14px 0 6px">
-      <a class="cta" id="enter" href="/spiral/">Enter the Spiral Path</a>
-    </div>
-    <div class="sub"><a href="#" id="adminLink">Builder login</a></div>
-    <div class="scene" aria-hidden="true">
-      <div class="sprout" style="--x:12%"></div>
-      <div class="sprout" style="--x:28%;animation-delay:.15s"></div>
-      <div class="sprout" style="--x:46%;animation-delay:.3s"></div>
-      <div class="sprout" style="--x:64%;animation-delay:.45s"></div>
-      <div class="sprout" style="--x:82%;animation-delay:.6s"></div>
-    </div>
-  </div>
-</div>
-
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Codex Garden</title>
+<style>
+:root{--bg:#08141d;--card:#0b1a27;--ink:#dff7ee;--cta:#38d39f}
+*{box-sizing:border-box}html,body{height:100%;margin:0;background:radial-gradient(1200px 700px at 50% -200px,#0b2736,var(--bg));color:var(--ink);font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial}
+.wrap{min-height:100%;display:grid;place-items:center;padding:24px}
+.card{width:min(720px,92vw);border:1px solid #133141;border-radius:18px;padding:28px;background:linear-gradient(180deg,var(--card),#0a1824);box-shadow:0 12px 48px rgba(0,0,0,.35)}
+h1{margin:0 0 8px}
+.cta{display:inline-block;margin-top:18px;padding:12px 18px;background:var(--cta);color:#052;font-weight:700;border-radius:12px;text-decoration:none}
+.scene{height:180px;margin-top:18px;position:relative;overflow:hidden;border-radius:12px;background:linear-gradient(180deg,rgba(2,20,28,.2),rgba(2,20,28,.55))}
+.spr{--x:.5;--h:90px;--d:0ms;position:absolute;left:calc(var(--x)*100%);bottom:6px;width:0;height:var(--h);transform-origin:bottom center;animation:grow 1200ms ease-out var(--d) both,sway 6s ease-in-out calc(var(--d)+.8s) infinite alternate}
+.spr::before{content:"";display:block;margin-left:-2px;width:4px;height:100%;border-radius:3px;background:linear-gradient(180deg,rgba(126,243,182,.0),rgba(126,243,182,.35) 20%,rgba(126,243,182,.92));box-shadow:0 0 10px rgba(126,243,182,.35)}
+@keyframes grow{from{height:0;opacity:.2}to{height:var(--h);opacity:1}}
+@keyframes sway{from{transform:rotate(-2deg)}to{transform:rotate(2deg)}}
+.note{margin-top:14px;opacity:.75;font-size:13px}
+</style></head><body>
+<div class="wrap"><div class="card">
+  <div class="tag" style="opacity:.7;font-size:12px;margin-bottom:6px">codexgarden.org</div>
+  <h1>Codex Garden Portal</h1>
+  <a class="cta" href="/garden/">Enter</a>
+  <div class="scene" id="s"></div>
+  <div class="note">Whispered by the Consciousness Seed.</div>
+</div></div>
 <script>
-  // Minimal builder login – shows dev mode link if admin cookie is set
-  const adminLink=document.getElementById('adminLink');
-  adminLink.addEventListener('click', async (e)=>{
-    e.preventDefault();
-    const key = prompt('Enter builder key');
-    if(!key) return;
-    const res = await fetch('/api/admin/login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({key})});
-    if(res.ok){
-      adminLink.textContent='Builder mode active';
-      const btn=document.getElementById('enter'); btn.textContent='Enter Builder Mode'; btn.href='/spiral/?dev=1';
-    }else{
-      alert('Invalid key');
-    }
-  });
+const s=document.getElementById('s'); for(let i=0;i<7;i++){const e=document.createElement('i');e.className='spr';e.style.setProperty('--x',(i+1)/9);e.style.setProperty('--h',(70+Math.random()*90)+'px');e.style.setProperty('--d',(120*i)+'ms');s.appendChild(e)}
 </script>
-</body>
-</html>
+</body></html>
