@@ -7,3 +7,9 @@ superspeed/*.tar.gz
 snapshots/
 logs/
 *.log
+
+# heavy artifacts
+superspeed/
+logs/
+snapshots/
+*.tar.gz
