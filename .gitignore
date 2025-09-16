@@ -7,4 +7,3 @@ superspeed/*.tar.gz
 snapshots/
 logs/
 *.log
-*.pid
