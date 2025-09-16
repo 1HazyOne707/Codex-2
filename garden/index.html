@@ -1,72 +1,55 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Codex Garden</title>
-<style>
-  :root { --bg1:#061e27; --bg2:#0a2a33; --glow:#55f7c8; --stem:#45e1ae; }
-  html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg1),var(--bg2));color:#e8fff0;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial}
-  .wrap{position:relative;height:100vh;overflow:hidden}
-  /* mist */
-  .mist{position:absolute;inset:0;pointer-events:none;background:radial-gradient(60% 40% at 50% 30%,rgba(85,247,200,.08),transparent 60%)}
-  /* the field the plants anchor to */
-  .field{position:absolute;left:0;right:0;top:12vh;bottom:6vh}
-  /* plant visuals */
-  .plant{position:absolute; width:6px; height:var(--h,64px); transform:translate(-50%,-100%); 
-         animation:sway 6s ease-in-out infinite; animation-delay:var(--delay,0ms); }
-  .plant::before{content:""; position:absolute; left:50%; bottom:0; width:2px; height:100%;
-         background:linear-gradient(var(--stem), color-mix(in oklab, var(--stem), #0b6 40%));
-         transform:translateX(-50%); border-radius:2px; opacity:.8; 
-         animation:grow .9s cubic-bezier(.2,.7,.2,1) both;}
-  .plant::after{content:""; position:absolute; left:50%; top:-6px; width:12px; height:12px; 
-         background:radial-gradient(closest-side,var(--glow), #00f0a000);
-         border-radius:50%; transform:translate(-50%,-50%); filter:blur(.4px); opacity:.9;}
-  @keyframes grow{from{height:0}to{height:100%}}
-  @keyframes sway{0%,100%{transform:translate(-50%,-100%) rotate(-1.6deg)}
-                  50%     {transform:translate(-50%,-100%) rotate( 1.6deg)}}
-  /* subtle ground fade */
-  .ground{position:absolute;left:0;right:0;bottom:0;height:20vh;
-          background:linear-gradient(180deg,transparent,rgba(0,0,0,.25))}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Garden</title>
+  <style>
+    html,body{height:100%;margin:0;background:#071015}
+    canvas{display:block;width:100%;height:100%}
+    .hud{position:fixed;inset:auto 12px 12px auto;background:#0b1417cc;border:1px solid #142a2f;color:#cfe;padding:8px 10px;border-radius:10px;font:12px/1.3 system-ui}
+    a{color:#9fe}
+  </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="mist"></div>
-    <div id="field" class="field"></div>
-    <div class="ground"></div>
-  </div>
+  <canvas id="c"></canvas>
+  <div class="hud">Garden (private) · <a href="/api/me">status</a></div>
 <script>
-(async function start(){
-  const field = document.getElementById('field');
+const el = document.getElementById('c');
+const ctx = el.getContext('2d');
+function fit(){ el.width = innerWidth*devicePixelRatio; el.height = innerHeight*devicePixelRatio; ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);}
+addEventListener('resize',fit); fit();
 
-  async function draw(){
-    try{
-      const r = await fetch('/api/seed', {cache:'no-store'});
-      const j = await r.json();
-      const nodes = (j && j.nodes) ? j.nodes : [];
-      field.innerHTML = '';
-
-      const H = field.clientHeight, W = field.clientWidth;
-      nodes.forEach((n,i)=>{
-        // clamp + map to viewport
-        const x = Math.max(0.02, Math.min(0.98, (typeof n.x==='number'?n.x:Math.random()))) * W;
-        const y = Math.max(0.45, Math.min(0.95, (typeof n.y==='number'?n.y:0.7))) * H;
-        const weight = Math.max(0.6, Math.min(3, n.weight || 1));
-        const el = document.createElement('div');
-        el.className = 'plant';
-        el.style.left = `${x}px`;
-        el.style.top  = `${y}px`;
-        el.style.setProperty('--h', `${40 + weight*26}px`);
-        el.style.setProperty('--delay', `${(i%12)*90}ms`);
-        field.appendChild(el);
-      });
-    }catch(e){ /* keep quiet; try again */ }
-  }
-
-  // first draw + poll
-  await draw();
-  setInterval(draw, 4000);
+async function loadSeed(){
+  const r = await fetch('/api/seed', {headers:{'cache-control':'no-store'}});
+  if(!r.ok){ ctx.fillStyle='#9aa'; ctx.fillText('No seed or not authorized', 20, 30); return {nodes:[],links:[]} }
+  return r.json();
+}
+function draw(seed){
+  ctx.clearRect(0,0,innerWidth,innerHeight);
+  const nodes = seed.nodes||[];
+  const links = seed.links||[];
+  // links
+  ctx.strokeStyle='rgba(120,210,190,0.25)';
+  ctx.lineWidth=1.5;
+  links.forEach(l=>{
+    const a = nodes.find(n=>n.id===l.source)||nodes[l.source]|0;
+    const b = nodes.find(n=>n.id===l.target)||nodes[l.target]|0;
+    if(!a||!b) return;
+    ctx.beginPath(); ctx.moveTo(a.x*innerWidth, a.y*innerHeight); ctx.lineTo(b.x*innerWidth, b.y*innerHeight); ctx.stroke();
+  });
+  // nodes
+  nodes.forEach(n=>{
+    const x=n.x*innerWidth, y=n.y*innerHeight;
+    ctx.fillStyle='rgba(90,240,200,.9)';
+    ctx.beginPath(); ctx.arc(x,y, 4+(n.weight||1)*.5, 0, Math.PI*2); ctx.fill();
+  });
+}
+(async function main(){
+  const seed = await loadSeed();
+  draw(seed);
+  // light heartbeat refresh
+  setInterval(async()=>{ const s=await loadSeed(); draw(s); }, 4000);
 })();
 </script>
 </body>
