@@ -1,5 +1,9 @@
 export const onRequestPost: PagesFunction = async ({ request, env }) => {
-  const key = (await request.text()).trim() || request.headers.get('x-admin-key') || '';
+  // prefer header; only read body if header missing
+  let key = request.headers.get('x-admin-key') || '';
+  if (!key) {
+    try { key = (await request.text()).trim(); } catch { key = ''; }
+  }
   if (!key || key !== (env as any).ADMIN_KEY) {
     return new Response(JSON.stringify({ ok:false }), {
       status: 401,
@@ -7,6 +11,6 @@ export const onRequestPost: PagesFunction = async ({ request, env }) => {
     });
   }
   const headers = new Headers({ 'content-type':'application/json' });
-  headers.append('set-cookie', 'codex_admin=1; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400; Secure');
+  headers.append('set-cookie','codex_admin=1; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400; Secure');
   return new Response(JSON.stringify({ ok:true }), { headers });
 };
