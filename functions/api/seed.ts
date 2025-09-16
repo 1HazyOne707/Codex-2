@@ -1,44 +1,25 @@
-export interface Env { CODEX_KV: KVNamespace }
+import { DEFAULT_SEED } from "../_lib/defaultSeed";
 
-async function readBody<T=unknown>(req: Request): Promise<T|null> {
-  try { return await req.json() as T } catch { return null }
-}
+interface Env { Codex_KV: KVNamespace }
 
-const JSONH = { "content-type":"application/json; charset=utf-8" }
+export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
+  let seed = await env.Codex_KV.get("seed", "json").catch(() => null);
 
-export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
-  const method = request.method.toUpperCase()
-
-  if (method === 'GET') {
-    const raw = await env.CODEX_KV.get('seed', 'text')
-    if (!raw) {
-      // empty starter seed
-      const seed = {
-        meta: { name: "codex.world-seed", updated: new Date().toISOString() },
-        nodes: [],
-        links: [],
-        jobs: []
-      }
-      return new Response(JSON.stringify(seed), { headers: JSONH })
-    }
-    return new Response(raw, { headers: JSONH })
+  if (!seed) {
+    // if missing, auto-restore default
+    seed = DEFAULT_SEED;
+    await env.Codex_KV.put("seed", JSON.stringify(seed));
   }
 
-  if (method === 'POST') {
-    // admin only
-    const cookie = request.headers.get('cookie') || ''
-    const isAdmin = /(?:^|;\s*)codex_admin=1\b/.test(cookie)
-    if (!isAdmin) return new Response(JSON.stringify({ ok:false, reason:'admin-only' }), { status:403, headers: JSONH })
+  return new Response(JSON.stringify(seed), {
+    headers: { "content-type": "application/json" }
+  });
+};
 
-    const body = await readBody<any>(request)
-    if (!body || typeof body !== 'object') {
-      return new Response(JSON.stringify({ ok:false, reason:'invalid-json' }), { status:400, headers: JSONH })
-    }
-    body.meta ||= {}
-    body.meta.updated = new Date().toISOString()
-    await env.CODEX_KV.put('seed', JSON.stringify(body))
-    return new Response(JSON.stringify({ ok:true }), { headers: JSONH })
-  }
-
-  return new Response(JSON.stringify({ ok:false, reason:'method' }), { status:405, headers: JSONH })
-}
+export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
+  const body = await request.json().catch(() => ({}));
+  await env.Codex_KV.put("seed", JSON.stringify(body));
+  return new Response(JSON.stringify({ ok:true, saved: body }), {
+    headers: { "content-type": "application/json" }
+  });
+};
