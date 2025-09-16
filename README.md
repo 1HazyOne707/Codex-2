@@ -5,3 +5,4 @@ Deployed with **Cloudflare Pages** (no local Wrangler).
 - Pages Function at `/api/hello` using `/functions` directory
 
 Push to `main`, connect the repo in Cloudflare Pages, and ship.
+
