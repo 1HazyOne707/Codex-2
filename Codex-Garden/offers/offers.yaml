@@ -1,0 +1,13 @@
+- slug: amazon
+  name: Amazon
+  base: "https://www.amazon.com/"
+  url:
+ "https://www.amazon.com/?tag=YOUR_AMAZON_TAG"
+  category: general
+  notes: "Generic entry point"
+
+- slug: ledger
+  name: Ledger Hardware Wallet
+  url:
+ "https://shop.ledger.com/?r=YOUR_LEDGER_CODE&utm_source=codex"
+  category: crypto
