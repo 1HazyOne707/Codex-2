@@ -23,3 +23,9 @@ snapshots/
 # filter-repo temp
 .git-rewrite/
 superspeed/
+bin/server.out
+bin/watch_out
+engines/**/artifacts/
+shadow/garden/*.json
+shadow/garden/*.md
+codex_artifacts/
