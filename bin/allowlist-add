@@ -1,0 +1,9 @@
+#!/data/data/com.termux/files/usr/bin/bash
+set -euo pipefail
+PAT="$HOME/codex/allowlist.patterns"
+abs=$(realpath -m "${1:?path-to-script}")   # e.g. ~/codex/do_the_thing.sh
+# escape for regex and sed
+esc=$(printf '%s' "$abs" | sed -e 's/[.[\*^$()+{}?\/|\\]/\\&/g' -e 's/ /\\ /g' -e 's/_/\\_/g')
+printf '^[[[:space:]]]*%s(\\s|$)\n' "$esc" >> "$PAT"
+echo "appended -> $PAT"
+tail -n 1 "$PAT"

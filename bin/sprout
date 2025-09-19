@@ -1,0 +1,9 @@
+#!/data/data/com.termux/files/usr/bin/bash
+set -euo pipefail
+OUT="$HOME/codex/seed/gate/outbox"
+S="$(ls -t "$OUT"/*.tgz 2>/dev/null | head -n1 || true)"
+if [ -n "${S:-}" ]; then
+  echo "Sprout would use: $S"
+else
+  echo "No seed archives found in: $OUT"
+fi

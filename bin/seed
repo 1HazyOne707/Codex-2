@@ -1,0 +1,9 @@
+#!/data/data/com.termux/files/usr/bin/bash
+set -euo pipefail
+. "$HOME/codex/lib/common.sh"
+OUT="$HOME/codex/seed/gate/outbox"
+IN="$HOME/codex/seed/gate/inbox"
+mkdir -p "$OUT" "$IN"
+echo "Seed inbox:  $IN"
+echo "Seed outbox: $OUT"
+echo "Put *.tgz in outbox to sprout; none is fine for now."

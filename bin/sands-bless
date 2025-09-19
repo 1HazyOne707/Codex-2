@@ -1,0 +1,21 @@
+#!/data/data/com.termux/files/usr/bin/bash
+set -euo pipefail
+cd "$HOME/codex"
+
+# init safety
+git rev-parse --git-dir >/dev/null 2>&1 || git init
+
+# stage everything that isn't ignored
+git add -A
+
+# commit if there are changes; otherwise do nothing noisily-successful
+if ! git diff --cached --quiet; then
+  msg="bless: $(date -Is)"
+  git commit -m "$msg" >/dev/null
+  echo "[bless] $msg"
+else
+  echo "[bless] no changes to commit"
+fi
+
+# move/update the 'last-ok' tag so rewind is simple & reliable
+git tag -f last-ok >/dev/null 2>&1 || git tag last-ok >/dev/null 2>&1

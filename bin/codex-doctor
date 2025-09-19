@@ -1,0 +1,10 @@
+#!/data/data/com.termux/files/usr/bin/bash
+set -euo pipefail
+echo "== codex doctor @ $(date -Is)"
+echo "-- env --"
+command -v bash awk sed grep git tmux >/dev/null 2>&1 && echo "core tools ok" || echo "missing core tools"
+echo "-- status --"; "$HOME/codex/bin/codex-status" || true
+echo "-- recent errors --"
+grep -E 'fail|ERROR|QUEUE|rewind' "$HOME/codex/logs/"*.log 2>/dev/null | tail -n 20 || echo "(none)"
+echo "-- space --"
+du -x -h --max-depth=1 "$HOME/codex" 2>/dev/null | sort -h || true

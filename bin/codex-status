@@ -1,0 +1,16 @@
+#!/data/data/com.termux/files/usr/bin/bash
+set -euo pipefail
+ROOT="$HOME/codex"
+echo "== Codex Status =="
+git -C "$ROOT" --no-pager log -1 --pretty='last bless commit: %h %ad %s' 2>/dev/null || echo "no git history yet"
+echo
+echo "-- runner tail --"
+tail -n 15 "$ROOT/logs/runner.log" 2>/dev/null || echo "(no runner.log)"
+echo
+echo "-- counts --"
+q="$ROOT/queue"; s="$ROOT/QUEUE_STASH"
+printf "queue: "; [ -d "$q" ] && ls -1A "$q" | wc -l || echo 0
+printf "stash: "; [ -d "$s" ] && ls -1A "$s" | wc -l || echo 0
+echo
+echo "-- disk --"
+df -h | sed -n '1,3p'

@@ -3,3 +3,29 @@ node_modules
 dist
 build
 .env*
+superspeed/*.tar.gz
+snapshots/
+logs/
+*.log
+
+# heavy artifacts
+superspeed/
+logs/
+snapshots/
+*.tar.gz
+
+# heavy artifacts
+superspeed/
+logs/
+snapshots/
+*.tar.gz
+
+# filter-repo temp
+.git-rewrite/
+superspeed/
+bin/server.out
+bin/watch_out
+engines/**/artifacts/
+shadow/garden/*.json
+shadow/garden/*.md
+codex_artifacts/

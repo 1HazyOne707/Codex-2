@@ -1,0 +1,10 @@
+#!/data/data/com.termux/files/usr/bin/bash
+set -euo pipefail
+STASH="$HOME/codex/QUEUE_STASH"
+KEEP=${KEEP:-50}
+[ -d "$STASH" ] || { echo "no stash dir"; exit 0; }
+# sort by mtime newest first, skip first $KEEP, delete the rest
+find "$STASH" -type f -printf '%T@ %p\0' | sort -zrn | tr '\0' '\n' | awk 'NR>'"$KEEP"'{sub(/^[0-9.]+ /,""); print}' | while read -r f; do
+  rm -f "$f" && echo "[purge] $(date -Is) $f"
+done
+echo "kept last $KEEP."

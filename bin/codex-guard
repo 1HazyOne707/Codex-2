@@ -1,0 +1,23 @@
+#!/data/data/com.termux/files/usr/bin/bash
+set -euo pipefail
+target="${1:-}"
+if [[ -z "${target}" ]]; then
+  printf '❌ Give me a file to check.\n' >&2; exit 2
+fi
+# allow "short names" like "good" -> $HOME/codex/lib/good.sh
+if [[ -n "$target" && "$target" != /* && "$target" != ~/* ]]; then
+  cand="$HOME/codex/lib/${target%.sh}.sh"
+else
+  cand="$target"
+fi
+if [[ ! -f "$cand" ]]; then
+  printf '❌ Not found: %s\n' "$cand" >&2; exit 2
+fi
+# bash syntax check
+if bash -n "$cand" 2>/dev/null; then
+  printf '✅ Syntax looks OK for: %s\n' "$cand"
+  exit 0
+else
+  printf '❌ Syntax error in: %s\n' "$cand" >&2
+  exit 1
+fi
